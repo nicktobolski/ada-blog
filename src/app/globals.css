@@ -35,6 +35,16 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+.prose h3 {
+  font-weight: 700;
+}
+
+.prose h3 + p {
+  color: var(--muted);
+  font-size: 0.85em;
+  margin-top: -0.75rem;
+}
+
 .prose details {
   margin-top: 1rem;
   margin-bottom: 1rem;
