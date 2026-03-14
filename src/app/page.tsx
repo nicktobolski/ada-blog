@@ -49,7 +49,7 @@ export default function Home() {
                     {tagLabel(post.slug)}
                   </span>
                 </div>
-                <h2 className="mt-1 text-lg font-medium text-foreground group-hover:text-accent transition-colors">
+                <h2 className="mt-1 text-lg font-medium text-accent group-hover:underline transition-colors">
                   {post.title}
                 </h2>
               </Link>
