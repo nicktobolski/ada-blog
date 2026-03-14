@@ -119,7 +119,7 @@ async function PostPage({ slug }: { slug: string[] }) {
         )}
       </header>
       <div
-        className="prose prose-neutral dark:prose-invert max-w-none prose-headings:tracking-tight prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-table:text-sm"
+        className="prose prose-neutral dark:prose-invert max-w-none prose-headings:tracking-tight prose-a:text-accent prose-a:no-underline prose-a:hover:underline prose-table:text-sm"
         dangerouslySetInnerHTML={{ __html: post.contentHtml }}
       />
     </article>
