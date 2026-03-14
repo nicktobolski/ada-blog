@@ -107,12 +107,13 @@ async function PostPage({ slug }: { slug: string[] }) {
         {post.tags.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
             {post.tags.map((tag: string) => (
-              <span
+              <Link
                 key={tag}
-                className="rounded-full bg-foreground/5 px-2.5 py-0.5 text-xs text-muted"
+                href={`/tags/${tag}`}
+                className="rounded-full bg-foreground/5 px-2.5 py-0.5 text-xs text-muted hover:bg-foreground/10 hover:text-foreground transition-colors"
               >
                 {tag}
-              </span>
+              </Link>
             ))}
           </div>
         )}

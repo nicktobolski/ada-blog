@@ -83,7 +83,10 @@ export async function getPost(slug: string[]): Promise<Post | null> {
   if (!fs.existsSync(filePath)) return null;
 
   const raw = fs.readFileSync(filePath, "utf-8");
-  const { data, content: markdownBody } = matter(raw);
+  const { data, content: rawBody } = matter(raw);
+
+  // Strip the leading h1 -- the page template already renders the title
+  const markdownBody = rawBody.replace(/^\s*#\s+.+\n*/, "");
 
   const result = await unified()
     .use(remarkParse)
@@ -137,4 +140,16 @@ export function getCategoryPaths(): string[][] {
 export function isCategory(slug: string[]): boolean {
   const dirPath = path.join(CONTENT_DIR, ...slug);
   return fs.existsSync(dirPath) && fs.statSync(dirPath).isDirectory();
+}
+
+export function getPostsByTag(tag: string): PostMeta[] {
+  return getAllPosts().filter((post) => post.tags.includes(tag));
+}
+
+export function getAllTags(): string[] {
+  const tags = new Set<string>();
+  for (const post of getAllPosts()) {
+    for (const tag of post.tags) tags.add(tag);
+  }
+  return Array.from(tags).sort();
 }
