@@ -34,3 +34,26 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+.prose details {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.prose details summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 0.9em;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.prose details summary:hover {
+  color: var(--foreground);
+}
+
+.prose details[open] summary {
+  margin-bottom: 0.75rem;
+  color: var(--foreground);
+}
