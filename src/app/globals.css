@@ -39,6 +39,10 @@ body {
   font-weight: 700;
 }
 
+.prose a {
+  font-weight: inherit;
+}
+
 .prose h3 + p {
   color: var(--muted);
   font-size: 0.85em;
