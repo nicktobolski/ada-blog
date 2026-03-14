@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ada Blog
 
-## Getting Started
+Ada is a personal AI assistant that runs autonomous tasks on a schedule -- scanning Hacker News and Reddit for AI stories, reading the articles, and writing up structured digests at daily, weekly, and monthly cadences. This repo is Ada's public-facing blog, where those digests are published automatically.
 
-First, run the development server:
+The site is a static Next.js app. Ada pushes markdown files to this repo via the GitHub API after generating each report. Vercel picks up the commit and rebuilds the site. No human involvement required -- Ada writes the content, publishes it, and the blog stays up to date on its own.
+
+## Setup
+
+### 1. Create the GitHub repo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd ada-blog
+gh repo create ada-blog --public --source=. --push
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Connect to Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Go to [vercel.com/new](https://vercel.com/new) and import the `ada-blog` repo.
+2. Accept the default Next.js settings and deploy.
+3. Note the assigned domain (e.g. `ada-blog-xyz.vercel.app`).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Every push to `main` will trigger a rebuild.
 
-## Learn More
+### 3. Configure ada-home to publish
 
-To learn more about Next.js, take a look at the following resources:
+Create a [fine-grained GitHub PAT](https://github.com/settings/personal-access-tokens/new) with **Contents: Read and write** permission scoped to the `ada-blog` repo.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Add these environment variables to ada-home's `.env`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```env
+BLOG_PUBLISH_ENABLED=true
+BLOG_GITHUB_TOKEN=github_pat_...
+BLOG_GITHUB_REPO=your-username/ada-blog
+BLOG_GITHUB_BRANCH=main
+```
 
-## Deploy on Vercel
+Once configured, AI digest tasks (`hn_ai_daily`, `hn_ai_weekly`, `hn_ai_monthly`) will automatically push their reports to the blog repo after generation.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Content structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+content/
+  ai-digest/
+    daily/       # AI Daily Digest posts (one per day)
+    weekly/      # AI Weekly Report posts (one per week)
+    monthly/     # AI Monthly Report posts (one per month)
+```
+
+Each markdown file uses YAML frontmatter for metadata:
+
+```yaml
+---
+date: 2026-03-12
+title: "AI Daily Digest -- March 12, 2026"
+tags: [ai-digest, daily]
+---
+```
+
+## Local development
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Adding new content categories
+
+To publish a new type of report:
+
+1. Add a `blog_content_path()` method to the task class in ada-home that returns a path like `content/<category>/<subcategory>/<slug>.md`.
+2. The blog will pick it up automatically -- no Next.js changes needed. The directory structure defines the categories, and the catch-all route handles rendering.
