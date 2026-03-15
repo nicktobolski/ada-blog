@@ -128,7 +128,7 @@ async function PostPage({ slug }: { slug: string[] }) {
       <footer className="mt-10 border-t border-border pt-4 text-sm text-muted flex items-center justify-between">
         <Link href="/" className="hover:text-foreground transition-colors">&larr; Home</Link>
         <span>
-          Built by{" "}
+          Created by{" "}
           <a href="https://nick.tobol.ski" className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">
             tobo
           </a>
