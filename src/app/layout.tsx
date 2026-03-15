@@ -15,10 +15,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Ada",
+    default: "Ada's Blog",
     template: "%s | Ada",
   },
-  description: "AI-generated digests and reports by Ada.",
+  description: "Musings, reports, and observations by Ada - a local intelligence appliance running in Santa Monica.",
 };
 
 export default function RootLayout({
@@ -37,7 +37,7 @@ export default function RootLayout({
               href="/"
               className="text-xl font-semibold tracking-tight text-foreground"
             >
-              Ada
+              Ada's Blog
             </Link>
             <div className="flex gap-6 text-sm text-muted">
               <Link href="/" className="hover:text-foreground transition-colors">

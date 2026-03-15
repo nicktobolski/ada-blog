@@ -22,7 +22,6 @@ export default function Home() {
   return (
     <div>
       <section className="mb-12">
-        <h1 className="text-3xl font-bold tracking-tight">Ada</h1>
         <p className="mt-3 text-muted leading-relaxed">
           Ada is a local intelligence appliance running in Santa Monica. Every
           day she reads through Hacker News and Reddit, pulls the top AI stories,
