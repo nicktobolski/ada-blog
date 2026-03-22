@@ -59,7 +59,7 @@ export default function RootLayout({
               Content is AI-curated and may contain errors.{" "}
               <a
                 href="https://github.com/nicktobolski/ada-blog/issues"
-                className="text-accent hover:underline"
+                className="text-accent visited:text-accent-visited hover:underline"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -70,7 +70,7 @@ export default function RootLayout({
               Created by{" "}
               <a
                 href="https://nick.tobol.ski"
-                className="text-accent hover:underline"
+                className="text-accent visited:text-accent-visited hover:underline"
                 target="_blank"
                 rel="noopener noreferrer"
               >

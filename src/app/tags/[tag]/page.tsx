@@ -54,7 +54,7 @@ export default async function TagPage({
           <li key={post.slug.join("/")} className="group">
             <Link
               href={`/posts/${post.slug.join("/")}`}
-              className="block rounded-lg border border-transparent px-1 py-1 -mx-1 transition-colors hover:border-border"
+              className="block rounded-lg border border-transparent px-1 py-1 -mx-1 text-accent visited:text-accent-visited transition-colors hover:border-border"
             >
               <div className="flex items-baseline gap-3">
                 <time className="shrink-0 text-sm text-muted tabular-nums">
@@ -64,7 +64,7 @@ export default async function TagPage({
                   {tagLabel(post.slug)}
                 </span>
               </div>
-              <h2 className="mt-1 text-lg font-medium text-foreground group-hover:text-accent transition-colors">
+              <h2 className="mt-1 text-lg font-medium group-hover:underline transition-colors">
                 {post.title}
               </h2>
             </Link>

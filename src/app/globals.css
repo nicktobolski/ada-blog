@@ -42,10 +42,6 @@ body {
   font-weight: 700;
 }
 
-a:visited {
-  color: var(--accent-visited);
-}
-
 .prose a {
   font-weight: inherit;
 }
