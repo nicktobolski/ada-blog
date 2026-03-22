@@ -108,6 +108,7 @@ export async function getPost(slug: string[]): Promise<Post | null> {
         : String(data.date)
       : "",
     tags: data.tags || [],
+    summary: data.summary || "",
     contentHtml: String(result),
   };
 }
