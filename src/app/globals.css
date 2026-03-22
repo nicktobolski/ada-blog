@@ -7,6 +7,7 @@
   --muted: #737373;
   --border: #e5e5e5;
   --accent: #2563eb;
+  --accent-visited: #7c3aed;
 }
 
 @theme inline {
@@ -15,6 +16,7 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-accent-visited: var(--accent-visited);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -26,6 +28,7 @@
     --muted: #a3a3a3;
     --border: #262626;
     --accent: #60a5fa;
+    --accent-visited: #a78bfa;
   }
 }
 
@@ -39,8 +42,16 @@ body {
   font-weight: 700;
 }
 
+a:visited {
+  color: var(--accent-visited);
+}
+
 .prose a {
   font-weight: inherit;
+}
+
+.prose a:visited {
+  color: var(--accent-visited);
 }
 
 .prose h3 + p {
