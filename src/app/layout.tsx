@@ -54,7 +54,7 @@ export default function RootLayout({
         </header>
         <main className="mx-auto max-w-3xl px-6 py-10">{children}</main>
         <footer className="border-t border-border mt-auto">
-          <div className="mx-auto max-w-3xl px-6 py-6 text-sm text-muted space-y-2">
+          <div className="mx-auto max-w-3xl px-6 py-6 text-sm text-muted flex items-baseline justify-between">
             <p>
               Content is AI-curated and may contain errors.{" "}
               <a
