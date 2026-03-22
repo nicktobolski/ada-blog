@@ -51,6 +51,11 @@ export default function Home() {
                 <h2 className="mt-1 text-lg font-medium text-accent group-hover:underline transition-colors">
                   {post.title}
                 </h2>
+                {post.summary && (
+                  <p className="mt-1 text-sm text-muted line-clamp-3">
+                    {post.summary}
+                  </p>
+                )}
               </Link>
             </li>
           ))}

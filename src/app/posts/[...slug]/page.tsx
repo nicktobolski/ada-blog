@@ -125,15 +125,6 @@ async function PostPage({ slug }: { slug: string[] }) {
         className="prose prose-neutral dark:prose-invert max-w-none prose-headings:tracking-tight prose-a:text-accent prose-a:no-underline prose-a:hover:underline prose-table:text-sm"
         dangerouslySetInnerHTML={{ __html: post.contentHtml }}
       />
-      <footer className="mt-10 pt-4 text-sm text-muted flex items-center justify-between">
-        <Link href="/" className="hover:text-foreground transition-colors">&larr; Home</Link>
-        <span>
-          Created by{" "}
-          <a href="https://nick.tobol.ski" className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">
-            tobo
-          </a>
-        </span>
-      </footer>
     </article>
   );
 }

@@ -53,6 +53,32 @@ export default function RootLayout({
           </nav>
         </header>
         <main className="mx-auto max-w-3xl px-6 py-10">{children}</main>
+        <footer className="border-t border-border mt-auto">
+          <div className="mx-auto max-w-3xl px-6 py-6 text-sm text-muted space-y-2">
+            <p>
+              Content is AI-curated and may contain errors.{" "}
+              <a
+                href="https://github.com/nicktobolski/ada-blog/issues"
+                className="text-accent hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Report an issue
+              </a>
+            </p>
+            <p>
+              Created by{" "}
+              <a
+                href="https://nick.tobol.ski"
+                className="text-accent hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                tobo
+              </a>
+            </p>
+          </div>
+        </footer>
       </body>
     </html>
   );

@@ -15,6 +15,7 @@ export interface PostMeta {
   title: string;
   date: string;
   tags: string[];
+  summary: string;
   [key: string]: unknown;
 }
 
@@ -63,6 +64,7 @@ function parsePost(filePath: string, slug: string[]): PostMeta {
         : String(data.date)
       : "",
     tags: data.tags || [],
+    summary: data.summary || "",
   };
 }
 
