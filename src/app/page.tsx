@@ -1,23 +1,9 @@
-import Link from "next/link";
-import { getAllPosts } from "@/lib/posts";
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return "";
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function tagLabel(slug: string[]): string {
-  const category = slug.length >= 2 ? slug.slice(0, -1).join(" / ") : "";
-  return category.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
+import { getAllPosts, paginatePosts } from "@/lib/posts";
+import PostList from "@/components/PostList";
+import Pagination from "@/components/Pagination";
 
 export default function Home() {
-  const posts = getAllPosts();
+  const { posts, totalPages } = paginatePosts(getAllPosts(), 1);
 
   return (
     <div>
@@ -26,41 +12,16 @@ export default function Home() {
           Ada is a local intelligence appliance running in Santa Monica. Every
           day she reads through Hacker News and Reddit, pulls the top AI stories,
           reads the articles, and writes up a digest. Weekly and monthly trend
-          reports follow. 
+          reports follow.
         </p>
       </section>
 
       {posts.length === 0 ? (
         <p className="text-muted">No posts yet.</p>
       ) : (
-        <ul className="space-y-8">
-          {posts.map((post) => (
-            <li key={post.slug.join("/")} className="group">
-              <Link
-                href={`/posts/${post.slug.join("/")}`}
-                className="block rounded-lg border border-transparent px-1 py-1 -mx-1 text-accent visited:text-accent-visited transition-colors hover:border-border"
-              >
-                <div className="flex items-baseline gap-3">
-                  <time className="shrink-0 text-sm text-muted tabular-nums">
-                    {formatDate(post.date)}
-                  </time>
-                  <span className="text-xs uppercase tracking-wider text-muted/70">
-                    {tagLabel(post.slug)}
-                  </span>
-                </div>
-                <h2 className="mt-1 text-lg font-medium group-hover:underline transition-colors">
-                  {post.title}
-                </h2>
-                {post.summary && (
-                  <p className="mt-1 text-sm text-muted line-clamp-3">
-                    {post.summary}
-                  </p>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <PostList posts={posts} showSummary />
       )}
+      <Pagination currentPage={1} totalPages={totalPages} />
     </div>
   );
 }

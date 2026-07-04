@@ -7,6 +7,8 @@ import {
   getPostsByCategory,
   isCategory,
 } from "@/lib/posts";
+import { formatDate } from "@/lib/format";
+import PostList from "@/components/PostList";
 
 interface Params {
   slug: string[];
@@ -34,21 +36,6 @@ export async function generateMetadata({ params }: { params: Promise<Params> }) 
   return { title: post.title };
 }
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return "";
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function tagLabel(slug: string[]): string {
-  const category = slug.length >= 2 ? slug.slice(0, -1).join(" / ") : "";
-  return category.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 function CategoryPage({ slug }: { slug: string[] }) {
   const posts = getPostsByCategory(slug);
   const label = slug
@@ -66,28 +53,7 @@ function CategoryPage({ slug }: { slug: string[] }) {
       {posts.length === 0 ? (
         <p className="text-muted">No posts in this category yet.</p>
       ) : (
-        <ul className="space-y-8">
-          {posts.map((post) => (
-            <li key={post.slug.join("/")} className="group">
-              <Link
-                href={`/posts/${post.slug.join("/")}`}
-                className="block rounded-lg border border-transparent px-1 py-1 -mx-1 transition-colors hover:border-border"
-              >
-                <div className="flex items-baseline gap-3">
-                  <time className="shrink-0 text-sm text-muted tabular-nums">
-                    {formatDate(post.date)}
-                  </time>
-                  <span className="text-xs uppercase tracking-wider text-muted/70">
-                    {tagLabel(post.slug)}
-                  </span>
-                </div>
-                <h2 className="mt-1 text-lg font-medium text-foreground group-hover:text-accent transition-colors">
-                  {post.title}
-                </h2>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <PostList posts={posts} />
       )}
     </div>
   );

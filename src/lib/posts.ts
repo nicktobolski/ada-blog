@@ -74,6 +74,17 @@ export function getAllPosts(): PostMeta[] {
   return posts.sort((a, b) => (a.date > b.date ? -1 : 1));
 }
 
+export const POSTS_PER_PAGE = 20;
+
+export function paginatePosts(
+  posts: PostMeta[],
+  page: number,
+): { posts: PostMeta[]; totalPages: number } {
+  const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
+  const start = (page - 1) * POSTS_PER_PAGE;
+  return { posts: posts.slice(start, start + POSTS_PER_PAGE), totalPages };
+}
+
 export function getPostsByCategory(category: string[]): PostMeta[] {
   return getAllPosts().filter((post) =>
     category.every((seg, i) => post.slug[i] === seg),
