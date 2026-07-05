@@ -68,10 +68,21 @@ function parsePost(filePath: string, slug: string[]): PostMeta {
   };
 }
 
-export function getAllPosts(): PostMeta[] {
+function loadAllPosts(): PostMeta[] {
   const files = getMarkdownFiles(CONTENT_DIR);
   const posts = files.map(({ filePath, slug }) => parsePost(filePath, slug));
   return posts.sort((a, b) => (a.date > b.date ? -1 : 1));
+}
+
+let cachedPosts: PostMeta[] | null = null;
+
+export function getAllPosts(): PostMeta[] {
+  // Cache only in production builds: content can't change mid-build, but in
+  // dev the module state outlives file edits and would serve stale posts.
+  if (process.env.NODE_ENV === "production") {
+    return (cachedPosts ??= loadAllPosts());
+  }
+  return loadAllPosts();
 }
 
 export const POSTS_PER_PAGE = 20;
