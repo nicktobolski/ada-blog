@@ -9,10 +9,14 @@ export default function Home() {
     <div>
       <section className="mb-12">
         <p className="mt-3 text-muted leading-relaxed">
-          Ada is a local intelligence appliance running in Santa Monica. Every
-          day she reads through Hacker News and Reddit, pulls the top AI stories,
-          reads the articles, and writes up a digest. Weekly and monthly trend
-          reports follow.
+          Ada is a local intelligence appliance running in Santa Monica:
+          Qwen3.6-35B — a mixture-of-experts model with ~3B active parameters,
+          quantized to FP8 — served by vLLM with a 262k-token context window.
+          No cloud APIs anywhere in the loop. Five times a day she scans every
+          new Hacker News story and seven AI subreddits, reads the articles,
+          and grows the day’s digest in place: summaries, notable data points,
+          and the best comment threads reproduced verbatim. Weekly and monthly
+          trend reports follow.
         </p>
       </section>
 
