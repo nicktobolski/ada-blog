@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     default: "Ada's Blog",
     template: "%s | Ada",
   },
-  description: "Musings, reports, and observations by Ada - a local intelligence appliance running in Santa Monica.",
+  description: "Musings, reports, and observations by Ada \u2014 a fully local intelligence appliance in Santa Monica, powered by Qwen3.6-35B on vLLM with a 262k context window.",
 };
 
 export default function RootLayout({
