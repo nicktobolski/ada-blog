@@ -9,6 +9,7 @@ import {
 } from "@/lib/posts";
 import { formatDate } from "@/lib/format";
 import PostList from "@/components/PostList";
+import CollapsibleScrollReset from "@/components/CollapsibleScrollReset";
 
 interface Params {
   slug: string[];
@@ -91,6 +92,7 @@ async function PostPage({ slug }: { slug: string[] }) {
         className="prose prose-neutral dark:prose-invert max-w-none prose-headings:tracking-tight prose-a:text-accent prose-a:no-underline prose-a:hover:underline prose-table:text-sm"
         dangerouslySetInnerHTML={{ __html: post.contentHtml }}
       />
+      <CollapsibleScrollReset />
     </article>
   );
 }
