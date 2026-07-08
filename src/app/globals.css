@@ -70,6 +70,7 @@ body {
   transition: color 0.15s;
   width: fit-content;
   padding-right: 0.75rem;
+  padding-block: 0.375rem;
 }
 
 .prose details summary:hover {
@@ -77,12 +78,11 @@ body {
 }
 
 .prose details[open] summary {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.375rem;
   color: var(--foreground);
   position: sticky;
   top: 0;
   z-index: 1;
   width: 100%;
   background: var(--background);
-  padding-block: 0.375rem;
 }
