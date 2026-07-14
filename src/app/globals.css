@@ -72,12 +72,32 @@ body {
     color: var(--foreground);
 }
 
+.prose details[open] {
+    /* Contains the pinned header's full-width mask so it can't cause horizontal
+       scroll. `clip` (unlike hidden/auto) does not create a scroll container, so
+       it leaves the sticky summary sticking to the viewport. */
+    overflow-x: clip;
+}
+
 .prose details[open] summary {
     margin-bottom: 0.375rem;
     color: var(--foreground);
     position: sticky;
     top: 0;
     z-index: 1;
-    width: 100%;
     background: var(--background);
+}
+
+/* When pinned, mask content scrolling past the right of the (fit-content)
+   label. Kept off the summary's own box so the clickable hit area stays
+   narrow; pointer-events: none makes this bar non-interactive. */
+.prose details[open] summary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 100%;
+    width: 100vw;
+    background: var(--background);
+    pointer-events: none;
 }
