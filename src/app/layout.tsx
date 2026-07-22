@@ -50,6 +50,12 @@ export default function RootLayout({
               >
                 AI Digest
               </Link>
+              <Link
+                href="/search"
+                className="hover:text-foreground transition-colors"
+              >
+                Search
+              </Link>
             </div>
           </nav>
         </header>

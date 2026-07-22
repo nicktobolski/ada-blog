@@ -7,8 +7,10 @@ import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeRaw from "rehype-raw";
 import rehypeStringify from "rehype-stringify";
+import type { Root, Nodes } from "hast";
+import { slugifyHeading } from "./format";
 
-const CONTENT_DIR = path.join(process.cwd(), "content");
+export const CONTENT_DIR = path.join(process.cwd(), "content");
 
 export interface PostMeta {
   slug: string[];
@@ -23,7 +25,7 @@ export interface Post extends PostMeta {
   contentHtml: string;
 }
 
-function getMarkdownFiles(
+export function getMarkdownFiles(
   dir: string,
   basePath: string[] = [],
 ): { filePath: string; slug: string[] }[] {
@@ -102,6 +104,38 @@ export function getPostsByCategory(category: string[]): PostMeta[] {
   );
 }
 
+function extractText(node: Nodes): string {
+  if (node.type === "text") return node.value;
+  if ("children" in node) return node.children.map(extractText).join("");
+  return "";
+}
+
+/**
+ * Adds anchor ids to story headings (h3) so search results can deep-link
+ * into a post. Duplicate titles within a post get -1, -2, … suffixes; the
+ * search index applies the same rule (h3s only, in document order).
+ */
+function rehypeStoryAnchors() {
+  return (tree: Root) => {
+    const counts = new Map<string, number>();
+    const walk = (node: Nodes) => {
+      if (node.type === "element" && node.tagName === "h3") {
+        const base = slugifyHeading(extractText(node));
+        if (base) {
+          const n = counts.get(base) ?? 0;
+          counts.set(base, n + 1);
+          node.properties = {
+            ...node.properties,
+            id: n === 0 ? base : `${base}-${n}`,
+          };
+        }
+      }
+      if ("children" in node) node.children.forEach(walk);
+    };
+    walk(tree);
+  };
+}
+
 export async function getPost(slug: string[]): Promise<Post | null> {
   const filePath = path.join(CONTENT_DIR, ...slug) + ".md";
   if (!fs.existsSync(filePath)) return null;
@@ -117,6 +151,7 @@ export async function getPost(slug: string[]): Promise<Post | null> {
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
+    .use(rehypeStoryAnchors)
     .use(rehypeStringify)
     .process(markdownBody);
 
