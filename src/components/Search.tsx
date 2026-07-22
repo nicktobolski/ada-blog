@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { formatDate, tagLabel } from "@/lib/format";
 import type { Story } from "@/lib/search";
@@ -38,16 +38,20 @@ export default function Search() {
   const [index, setIndex] = useState<IndexedStory[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState("");
+  const fetchStarted = useRef(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  // The index is ~700 KB gzipped, so don't fetch it on page load — only when
+  // the visitor commits by typing (or retries after a failure).
+  const loadIndex = useCallback(() => {
+    if (fetchStarted.current) return;
+    fetchStarted.current = true;
+    setFailed(false);
     fetch("/search-index.json")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
       .then((stories: Story[]) => {
-        if (cancelled) return;
         setIndex(
           stories.map((s) => ({
             ...s,
@@ -57,11 +61,9 @@ export default function Search() {
         );
       })
       .catch(() => {
-        if (!cancelled) setFailed(true);
+        fetchStarted.current = false;
+        setFailed(true);
       });
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   const q = query.trim().toLowerCase();
@@ -74,9 +76,9 @@ export default function Search() {
 
   let status: string;
   if (failed) {
-    status = "Couldn't load the search index. Try reloading the page.";
+    status = "Couldn't load the search index. Type to retry.";
   } else if (!index) {
-    status = "Loading search index…";
+    status = q ? "Loading search index…" : "Type to search stories.";
   } else if (matches === null) {
     status = `${index.length} stories indexed. Type at least ${MIN_QUERY_LENGTH} characters to search.`;
   } else if (matches.length === 0) {
@@ -93,7 +95,10 @@ export default function Search() {
         type="search"
         autoFocus
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          if (e.target.value.trim()) loadIndex();
+        }}
         placeholder="Search stories…"
         aria-label="Search stories"
         className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-base text-foreground placeholder:text-muted focus:outline-none focus:border-muted"
