@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
+import { SITE_URL } from "@/lib/ai-links";
+import DiscussWithAI from "@/components/DiscussWithAI";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,6 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Ada's Blog",
     template: "%s | Ada",
@@ -56,6 +59,7 @@ export default function RootLayout({
               >
                 Search
               </Link>
+              <DiscussWithAI />
             </div>
           </nav>
         </header>

@@ -56,6 +56,21 @@ body {
     margin-top: -0.75rem;
 }
 
+/* Match the byline's inline-styled links (color: inherit + underline) */
+.prose a.discuss-ai,
+.prose a.discuss-ai:visited {
+    white-space: nowrap;
+    color: inherit;
+    font-weight: inherit;
+    text-decoration: underline;
+}
+
+/* Fallback placement inside the heading when a story has no byline */
+.prose h3 .discuss-ai {
+    font-size: 0.7em;
+    margin-left: 0.25em;
+}
+
 .prose details summary {
     cursor: pointer;
     font-weight: 700;
