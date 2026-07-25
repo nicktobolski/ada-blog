@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import {
   DEFAULT_PROMPT,
@@ -82,6 +82,12 @@ export default function DiscussWithAI() {
   );
   const prompt = storedPrompt ?? DEFAULT_PROMPT;
 
+  // Edits are drafts local to the modal; only Save commits them to the
+  // stores (and thus to localStorage and the story links). Closing any
+  // other way discards them — the draft is re-seeded on every open.
+  const [draftPrompt, setDraftPrompt] = useState(DEFAULT_PROMPT);
+  const [draftProvider, setDraftProvider] = useState(DEFAULT_PROVIDER);
+
   // Keep every story link's href in sync with the current preferences. This
   // component lives in the persistent layout, so it must also re-run after
   // client-side navigation swaps in a new article — hence the pathname dep.
@@ -102,17 +108,24 @@ export default function DiscussWithAI() {
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
   };
-  useEffect(resizeTextarea, [prompt]);
-
-  // Only non-default prompts persist, so a future change to DEFAULT_PROMPT
-  // isn't shadowed by a stale stored copy of the old default.
-  const updatePrompt = (value: string) => {
-    promptStore.set(value === DEFAULT_PROMPT ? null : value);
-  };
+  useEffect(resizeTextarea, [draftPrompt]);
 
   const openDialog = () => {
+    setDraftPrompt(prompt);
+    setDraftProvider(provider);
     dialogRef.current?.showModal();
-    resizeTextarea();
+    // The draft renders after this handler; measure once it has.
+    requestAnimationFrame(resizeTextarea);
+  };
+
+  const save = () => {
+    // An all-whitespace prompt saves as the default rather than nothing.
+    // Only non-default prompts persist, so a future change to DEFAULT_PROMPT
+    // isn't shadowed by a stale stored copy of the old default.
+    const value = draftPrompt.trim() ? draftPrompt : DEFAULT_PROMPT;
+    promptStore.set(value === DEFAULT_PROMPT ? null : value);
+    providerStore.set(draftProvider);
+    dialogRef.current?.close();
   };
 
   return (
@@ -168,10 +181,10 @@ export default function DiscussWithAI() {
             <span className="relative inline-block">
               <select
                 id="discuss-provider"
-                value={provider}
+                value={draftProvider}
                 onChange={(e) => {
                   if (isProviderId(e.target.value)) {
-                    providerStore.set(e.target.value);
+                    setDraftProvider(e.target.value);
                   }
                 }}
                 className="cursor-pointer appearance-none rounded-md border border-border bg-background py-0.5 pl-2 pr-6 text-foreground hover:border-muted focus:outline-none focus:border-muted"
@@ -198,23 +211,31 @@ export default function DiscussWithAI() {
             ref={textareaRef}
             id="discuss-prompt"
             rows={1}
-            value={prompt}
+            value={draftPrompt}
             maxLength={MAX_PROMPT_LENGTH}
-            onChange={(e) => updatePrompt(e.target.value)}
-            onBlur={(e) => {
-              if (!e.target.value.trim()) updatePrompt(DEFAULT_PROMPT);
-            }}
+            onChange={(e) => setDraftPrompt(e.target.value)}
             className="mt-3 block w-full resize-none overflow-hidden rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-muted"
           />
-          {prompt !== DEFAULT_PROMPT && (
+          <div className="mt-4 flex items-center justify-between">
+            <span>
+              {draftPrompt !== DEFAULT_PROMPT && (
+                <button
+                  type="button"
+                  onClick={() => setDraftPrompt(DEFAULT_PROMPT)}
+                  className="text-xs text-muted underline hover:text-foreground focus:outline-none focus-visible:text-foreground"
+                >
+                  reset
+                </button>
+              )}
+            </span>
             <button
               type="button"
-              onClick={() => updatePrompt(DEFAULT_PROMPT)}
-              className="mt-2 text-xs text-muted underline hover:text-foreground focus:outline-none focus-visible:text-foreground"
+              onClick={save}
+              className="rounded-md bg-accent px-3 py-1 font-medium text-background transition-opacity hover:opacity-85"
             >
-              reset
+              Save
             </button>
-          )}
+          </div>
         </div>
       </dialog>
     </>
