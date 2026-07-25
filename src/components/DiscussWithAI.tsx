@@ -54,12 +54,16 @@ const providerStore = createPrefStore("ada:ai-provider");
 const promptStore = createPrefStore("ada:ai-prompt");
 
 /**
- * Preferences for the per-story "Ask AI" links that rehypeDiscussLinks bakes
- * into the article HTML. Those links ship with default hrefs so they work
- * without JS; this component rewrites them whenever the reader's stored
- * provider or prompt differs.
+ * Settings for the per-story "Ask AI" links that rehypeDiscussLinks bakes
+ * into the article HTML: a gear button in the post header that opens a modal
+ * with the prompt and provider preferences. The links ship with default
+ * hrefs so they work without JS; this component rewrites them whenever the
+ * reader's stored provider or prompt differs.
  */
 export default function DiscussWithAI() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const storedProvider = useSyncExternalStore(
     providerStore.subscribe,
     providerStore.get,
@@ -76,8 +80,6 @@ export default function DiscussWithAI() {
   );
   const prompt = storedPrompt ?? DEFAULT_PROMPT;
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   // Keep every story link's href in sync with the current preferences.
   useEffect(() => {
     document
@@ -88,13 +90,15 @@ export default function DiscussWithAI() {
       });
   }, [provider, prompt]);
 
-  // Auto-grow the textarea to fit its content.
-  useEffect(() => {
+  // Auto-grow the textarea to fit its content. A closed dialog is
+  // display:none, so this must also run when the dialog opens.
+  const resizeTextarea = () => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
-  }, [prompt]);
+  };
+  useEffect(resizeTextarea, [prompt]);
 
   // Only non-default prompts persist, so a future change to DEFAULT_PROMPT
   // isn't shadowed by a stale stored copy of the old default.
@@ -102,65 +106,113 @@ export default function DiscussWithAI() {
     promptStore.set(value === DEFAULT_PROMPT ? null : value);
   };
 
+  const openDialog = () => {
+    dialogRef.current?.showModal();
+    resizeTextarea();
+  };
+
   return (
-    <aside className="mt-10 border-t border-border pt-6 text-sm">
-      <h2 className="font-medium text-foreground">Discuss with AI</h2>
-      <p className="mt-1 text-muted">
-        Each story&apos;s <span className="text-accent">Ask AI</span> link
-        opens{" "}
-        <label htmlFor="discuss-provider" className="sr-only">
-          AI provider
-        </label>
-        <span className="relative inline-block">
-          <select
-            id="discuss-provider"
-            value={provider}
-            onChange={(e) => {
-              if (isProviderId(e.target.value)) {
-                providerStore.set(e.target.value);
-              }
-            }}
-            className="cursor-pointer appearance-none bg-transparent pr-4 text-foreground underline decoration-border underline-offset-4 hover:decoration-muted focus:outline-none focus:decoration-muted"
-          >
-            {Object.values(PROVIDERS).map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-0 flex items-center text-xs text-muted"
-          >
-            ▾
-          </span>
-        </span>{" "}
-        with the article&apos;s link and this prompt:
-      </p>
-      <label htmlFor="discuss-prompt" className="sr-only">
-        Prompt to send with each article link
-      </label>
-      <textarea
-        ref={textareaRef}
-        id="discuss-prompt"
-        rows={1}
-        value={prompt}
-        maxLength={MAX_PROMPT_LENGTH}
-        onChange={(e) => updatePrompt(e.target.value)}
-        onBlur={(e) => {
-          if (!e.target.value.trim()) updatePrompt(DEFAULT_PROMPT);
-        }}
-        className="mt-3 block w-full resize-none overflow-hidden rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-muted"
-      />
-      {prompt !== DEFAULT_PROMPT && (
-        <button
-          type="button"
-          onClick={() => updatePrompt(DEFAULT_PROMPT)}
-          className="mt-2 text-xs text-muted underline hover:text-foreground focus:outline-none focus-visible:text-foreground"
+    <>
+      <button
+        type="button"
+        aria-label="Ask AI settings"
+        title="Ask AI settings"
+        onClick={openDialog}
+        className="text-muted transition-colors hover:text-foreground"
+      >
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          reset
-        </button>
-      )}
-    </aside>
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+      </button>
+      <dialog
+        ref={dialogRef}
+        onClick={(e) => {
+          // Only clicks on the backdrop hit the dialog element itself.
+          if (e.target === dialogRef.current) dialogRef.current.close();
+        }}
+        className="m-auto w-full max-w-md rounded-xl border border-border bg-background p-0 text-sm text-foreground shadow-lg backdrop:bg-black/40"
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold">Discuss with AI</h2>
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => dialogRef.current?.close()}
+              className="text-muted transition-colors hover:text-foreground"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="mt-3 text-muted">
+            Each story&apos;s <span className="underline">Ask AI</span> link
+            opens{" "}
+            <label htmlFor="discuss-provider" className="sr-only">
+              AI provider
+            </label>
+            <span className="relative inline-block">
+              <select
+                id="discuss-provider"
+                value={provider}
+                onChange={(e) => {
+                  if (isProviderId(e.target.value)) {
+                    providerStore.set(e.target.value);
+                  }
+                }}
+                className="cursor-pointer appearance-none rounded-md border border-border bg-background py-0.5 pl-2 pr-6 text-foreground hover:border-muted focus:outline-none focus:border-muted"
+              >
+                {Object.values(PROVIDERS).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted"
+              >
+                ▾
+              </span>
+            </span>{" "}
+            with the article&apos;s link and this prompt:
+          </p>
+          <label htmlFor="discuss-prompt" className="sr-only">
+            Prompt to send with each article link
+          </label>
+          <textarea
+            ref={textareaRef}
+            id="discuss-prompt"
+            rows={1}
+            value={prompt}
+            maxLength={MAX_PROMPT_LENGTH}
+            onChange={(e) => updatePrompt(e.target.value)}
+            onBlur={(e) => {
+              if (!e.target.value.trim()) updatePrompt(DEFAULT_PROMPT);
+            }}
+            className="mt-3 block w-full resize-none overflow-hidden rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-muted"
+          />
+          {prompt !== DEFAULT_PROMPT && (
+            <button
+              type="button"
+              onClick={() => updatePrompt(DEFAULT_PROMPT)}
+              className="mt-2 text-xs text-muted underline hover:text-foreground focus:outline-none focus-visible:text-foreground"
+            >
+              reset
+            </button>
+          )}
+        </div>
+      </dialog>
+    </>
   );
 }
