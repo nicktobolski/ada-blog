@@ -1,7 +1,8 @@
-export type ProviderId = "chatgpt" | "claude";
+export type BuiltinProviderId = "chatgpt" | "claude";
+export type ProviderId = BuiltinProviderId | "custom";
 
 export interface Provider {
-  id: ProviderId;
+  id: BuiltinProviderId;
   label: string;
   build: (payload: string) => string;
 }
@@ -10,11 +11,11 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
   "https://ada-blog-seven.vercel.app";
 
-export const DEFAULT_PROVIDER: ProviderId = "chatgpt";
+export const DEFAULT_PROVIDER: BuiltinProviderId = "chatgpt";
 export const DEFAULT_PROMPT = "Summarize this for me";
 export const MAX_PROMPT_LENGTH = 1000;
 
-export const PROVIDERS: Record<ProviderId, Provider> = {
+export const PROVIDERS: Record<BuiltinProviderId, Provider> = {
   chatgpt: {
     id: "chatgpt",
     label: "ChatGPT",
@@ -32,7 +33,15 @@ export const PROVIDERS: Record<ProviderId, Provider> = {
 };
 
 export function isProviderId(value: unknown): value is ProviderId {
-  return typeof value === "string" && value in PROVIDERS;
+  return typeof value === "string" && (value === "custom" || value in PROVIDERS);
+}
+
+// Example shown to readers configuring a custom provider: the base URL up to
+// and including the query parameter the payload should be appended to.
+export const CUSTOM_URL_EXAMPLE = "https://www.perplexity.ai/search?q=";
+
+export function isValidCustomUrl(value: string): boolean {
+  return /^https?:\/\/\S+$/.test(value.trim());
 }
 
 export function postUrl(slug: string[]): string {
@@ -45,9 +54,16 @@ export function buildChatUrl(
   providerId: ProviderId,
   prompt: string,
   articleUrl: string,
+  customUrl = "",
 ): string {
   const text = (prompt.trim() || DEFAULT_PROMPT).slice(0, MAX_PROMPT_LENGTH);
-  return PROVIDERS[providerId].build(
-    encodeURIComponent(`${text}\n\n${articleUrl}`),
-  );
+  const payload = encodeURIComponent(`${text}\n\n${articleUrl}`);
+  if (providerId === "custom") {
+    // A custom provider whose URL is missing or malformed falls back to the
+    // default provider so the story links always lead somewhere useful.
+    const base = customUrl.trim();
+    if (isValidCustomUrl(base)) return `${base}${payload}`;
+    return PROVIDERS[DEFAULT_PROVIDER].build(payload);
+  }
+  return PROVIDERS[providerId].build(payload);
 }

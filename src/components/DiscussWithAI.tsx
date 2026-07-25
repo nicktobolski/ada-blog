@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import {
+  CUSTOM_URL_EXAMPLE,
   DEFAULT_PROMPT,
   DEFAULT_PROVIDER,
   MAX_PROMPT_LENGTH,
   PROVIDERS,
   buildChatUrl,
   isProviderId,
+  isValidCustomUrl,
+  type ProviderId,
 } from "@/lib/ai-links";
 
 /**
@@ -53,6 +56,7 @@ function createPrefStore(key: string) {
 
 const providerStore = createPrefStore("ada:ai-provider");
 const promptStore = createPrefStore("ada:ai-prompt");
+const customUrlStore = createPrefStore("ada:ai-custom-url");
 
 /**
  * Settings for the per-story "Ask AI" links that rehypeDiscussLinks bakes
@@ -82,11 +86,19 @@ export default function DiscussWithAI() {
   );
   const prompt = storedPrompt ?? DEFAULT_PROMPT;
 
+  const storedCustomUrl = useSyncExternalStore(
+    customUrlStore.subscribe,
+    customUrlStore.get,
+    customUrlStore.getServer,
+  );
+  const customUrl = storedCustomUrl ?? "";
+
   // Edits are drafts local to the modal; only Save commits them to the
   // stores (and thus to localStorage and the story links). Closing any
   // other way discards them — the draft is re-seeded on every open.
   const [draftPrompt, setDraftPrompt] = useState(DEFAULT_PROMPT);
-  const [draftProvider, setDraftProvider] = useState(DEFAULT_PROVIDER);
+  const [draftProvider, setDraftProvider] = useState<ProviderId>(DEFAULT_PROVIDER);
+  const [draftCustomUrl, setDraftCustomUrl] = useState("");
 
   // Keep every story link's href in sync with the current preferences. This
   // component lives in the persistent layout, so it must also re-run after
@@ -96,9 +108,9 @@ export default function DiscussWithAI() {
       .querySelectorAll<HTMLAnchorElement>("a[data-article-url]")
       .forEach((a) => {
         const url = a.dataset.articleUrl;
-        if (url) a.href = buildChatUrl(provider, prompt, url);
+        if (url) a.href = buildChatUrl(provider, prompt, url, customUrl);
       });
-  }, [provider, prompt, pathname]);
+  }, [provider, prompt, customUrl, pathname]);
 
   // Auto-grow the textarea to fit its content. A closed dialog is
   // display:none, so this must also run when the dialog opens.
@@ -113,18 +125,24 @@ export default function DiscussWithAI() {
   const openDialog = () => {
     setDraftPrompt(prompt);
     setDraftProvider(provider);
+    setDraftCustomUrl(customUrl);
     dialogRef.current?.showModal();
     // The draft renders after this handler; measure once it has.
     requestAnimationFrame(resizeTextarea);
   };
 
+  const customUrlInvalid =
+    draftProvider === "custom" && !isValidCustomUrl(draftCustomUrl);
+
   const save = () => {
+    if (customUrlInvalid) return;
     // An all-whitespace prompt saves as the default rather than nothing.
     // Only non-default prompts persist, so a future change to DEFAULT_PROMPT
     // isn't shadowed by a stale stored copy of the old default.
     const value = draftPrompt.trim() ? draftPrompt : DEFAULT_PROMPT;
     promptStore.set(value === DEFAULT_PROMPT ? null : value);
     providerStore.set(draftProvider);
+    customUrlStore.set(draftCustomUrl.trim() || null);
     dialogRef.current?.close();
   };
 
@@ -194,6 +212,7 @@ export default function DiscussWithAI() {
                     {p.label}
                   </option>
                 ))}
+                <option value="custom">Custom</option>
               </select>
               <span
                 aria-hidden="true"
@@ -204,6 +223,29 @@ export default function DiscussWithAI() {
             </span>{" "}
             with the article&apos;s link and this prompt:
           </p>
+          {draftProvider === "custom" && (
+            <div className="mt-3">
+              <label htmlFor="discuss-custom-url" className="text-muted">
+                Chat URL
+              </label>
+              <input
+                id="discuss-custom-url"
+                type="url"
+                value={draftCustomUrl}
+                placeholder={CUSTOM_URL_EXAMPLE}
+                onChange={(e) => setDraftCustomUrl(e.target.value)}
+                aria-invalid={customUrlInvalid}
+                aria-describedby="discuss-custom-url-help"
+                className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-muted"
+              />
+              <p id="discuss-custom-url-help" className="mt-1 text-xs text-muted">
+                Base URL up to and including the query parameter — the prompt
+                and article link are appended, URL-encoded. For example,{" "}
+                <code>{CUSTOM_URL_EXAMPLE}</code> becomes{" "}
+                <code>{CUSTOM_URL_EXAMPLE}Summarize%20this…</code>
+              </p>
+            </div>
+          )}
           <label htmlFor="discuss-prompt" className="sr-only">
             Prompt to send with each article link
           </label>
@@ -231,7 +273,13 @@ export default function DiscussWithAI() {
             <button
               type="button"
               onClick={save}
-              className="rounded-md bg-accent px-3 py-1 font-medium text-background transition-opacity hover:opacity-85"
+              disabled={customUrlInvalid}
+              title={
+                customUrlInvalid
+                  ? "Enter a chat URL starting with https://"
+                  : undefined
+              }
+              className="rounded-md bg-accent px-3 py-1 font-medium text-background transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Save
             </button>
