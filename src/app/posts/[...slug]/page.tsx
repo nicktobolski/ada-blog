@@ -10,6 +10,7 @@ import {
 import { formatDate } from "@/lib/format";
 import PostList from "@/components/PostList";
 import CollapsibleScrollReset from "@/components/CollapsibleScrollReset";
+import DiscussWithAI from "@/components/DiscussWithAI";
 
 interface Params {
   slug: string[];
@@ -92,6 +93,7 @@ async function PostPage({ slug }: { slug: string[] }) {
         className="prose prose-neutral dark:prose-invert max-w-none prose-headings:tracking-tight prose-a:text-accent prose-a:no-underline prose-a:hover:underline prose-table:text-sm"
         dangerouslySetInnerHTML={{ __html: post.contentHtml }}
       />
+      {post.contentHtml.includes("data-article-url") && <DiscussWithAI />}
       <CollapsibleScrollReset />
     </article>
   );

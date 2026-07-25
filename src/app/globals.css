@@ -56,6 +56,17 @@ body {
     margin-top: -0.75rem;
 }
 
+.prose .discuss-ai {
+    white-space: nowrap;
+}
+
+/* Fallback placement inside the heading when a story has no byline */
+.prose h3 .discuss-ai {
+    font-size: 0.7em;
+    font-weight: 400;
+    margin-left: 0.25em;
+}
+
 .prose details summary {
     cursor: pointer;
     font-weight: 700;

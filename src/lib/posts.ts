@@ -7,8 +7,14 @@ import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeRaw from "rehype-raw";
 import rehypeStringify from "rehype-stringify";
-import type { Root, Nodes } from "hast";
+import type { Root, Nodes, Element } from "hast";
 import { slugifyHeading } from "./format";
+import {
+  DEFAULT_PROMPT,
+  DEFAULT_PROVIDER,
+  buildChatUrl,
+  postUrl,
+} from "./ai-links";
 
 export const CONTENT_DIR = path.join(process.cwd(), "content");
 
@@ -136,6 +142,75 @@ function rehypeStoryAnchors() {
   };
 }
 
+function findFirstHref(node: Nodes): string | undefined {
+  if (node.type === "element" && node.tagName === "a") {
+    const href = node.properties?.href;
+    if (typeof href === "string") return href;
+  }
+  if ("children" in node) {
+    for (const child of node.children) {
+      const href = findFirstHref(child);
+      if (href) return href;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Appends an "Ask AI" link to every story: an <a> that opens the reader's AI
+ * chat prefilled with a prompt plus the story's article URL (the heading's
+ * external link, else the post's own anchor). The build-time href uses the
+ * default provider/prompt so the link works without JS; DiscussWithAI rewrites
+ * hrefs client-side when the reader has customized either. Must run after
+ * rehypeStoryAnchors so heading ids exist and aren't affected by the label.
+ */
+function rehypeDiscussLinks(slug: string[]) {
+  return (tree: Root) => {
+    const base = postUrl(slug);
+    const walk = (node: Nodes) => {
+      if (!("children" in node)) return;
+      node.children.forEach((child, i) => {
+        walk(child);
+        if (
+          child.type !== "element" ||
+          child.tagName !== "h3" ||
+          typeof child.properties?.id !== "string"
+        ) {
+          return;
+        }
+        const articleUrl =
+          findFirstHref(child) ?? `${base}#${child.properties.id}`;
+        const title = extractText(child).trim();
+        const link: Element = {
+          type: "element",
+          tagName: "a",
+          properties: {
+            className: ["discuss-ai"],
+            dataArticleUrl: articleUrl,
+            href: buildChatUrl(DEFAULT_PROVIDER, DEFAULT_PROMPT, articleUrl),
+            target: "_blank",
+            rel: ["noopener", "noreferrer"],
+            ariaLabel: title ? `Ask AI about “${title}”` : "Ask AI",
+          },
+          children: [{ type: "text", value: "Ask AI" }],
+        };
+        // Prefer the byline paragraph right after the heading ("368 points ·
+        // 224 comments · by …") so the link reads as story metadata.
+        let next = node.children[i + 1];
+        if (next?.type === "text" && !next.value.trim()) {
+          next = node.children[i + 2];
+        }
+        if (next?.type === "element" && next.tagName === "p") {
+          next.children.push({ type: "text", value: " · " }, link);
+        } else {
+          child.children.push({ type: "text", value: " " }, link);
+        }
+      });
+    };
+    walk(tree);
+  };
+}
+
 export async function getPost(slug: string[]): Promise<Post | null> {
   const filePath = path.join(CONTENT_DIR, ...slug) + ".md";
   if (!fs.existsSync(filePath)) return null;
@@ -152,6 +227,7 @@ export async function getPost(slug: string[]): Promise<Post | null> {
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeStoryAnchors)
+    .use(rehypeDiscussLinks, slug)
     .use(rehypeStringify)
     .process(markdownBody);
 
