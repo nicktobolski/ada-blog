@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import {
   DEFAULT_PROMPT,
   DEFAULT_PROVIDER,
@@ -63,6 +64,7 @@ const promptStore = createPrefStore("ada:ai-prompt");
 export default function DiscussWithAI() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pathname = usePathname();
 
   const storedProvider = useSyncExternalStore(
     providerStore.subscribe,
@@ -80,7 +82,9 @@ export default function DiscussWithAI() {
   );
   const prompt = storedPrompt ?? DEFAULT_PROMPT;
 
-  // Keep every story link's href in sync with the current preferences.
+  // Keep every story link's href in sync with the current preferences. This
+  // component lives in the persistent layout, so it must also re-run after
+  // client-side navigation swaps in a new article — hence the pathname dep.
   useEffect(() => {
     document
       .querySelectorAll<HTMLAnchorElement>("a[data-article-url]")
@@ -88,7 +92,7 @@ export default function DiscussWithAI() {
         const url = a.dataset.articleUrl;
         if (url) a.href = buildChatUrl(provider, prompt, url);
       });
-  }, [provider, prompt]);
+  }, [provider, prompt, pathname]);
 
   // Auto-grow the textarea to fit its content. A closed dialog is
   // display:none, so this must also run when the dialog opens.
@@ -118,7 +122,7 @@ export default function DiscussWithAI() {
         aria-label="Ask AI settings"
         title="Ask AI settings"
         onClick={openDialog}
-        className="text-muted transition-colors hover:text-foreground"
+        className="self-center text-muted transition-colors hover:text-foreground"
       >
         <svg
           aria-hidden="true"

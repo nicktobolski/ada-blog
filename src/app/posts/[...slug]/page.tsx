@@ -10,7 +10,6 @@ import {
 import { formatDate } from "@/lib/format";
 import PostList from "@/components/PostList";
 import CollapsibleScrollReset from "@/components/CollapsibleScrollReset";
-import DiscussWithAI from "@/components/DiscussWithAI";
 
 interface Params {
   slug: string[];
@@ -68,14 +67,11 @@ async function PostPage({ slug }: { slug: string[] }) {
   return (
     <article>
       <header className="mb-8 border-b border-border pb-6">
-        <div className="flex items-center justify-between gap-2 text-sm text-muted">
-          <div className="flex items-baseline gap-2 tabular-nums">
-            <time>{formatDate(post.date)}</time>
-            {post.generated ? (
-              <span>· {String(post.generated)}</span>
-            ) : null}
-          </div>
-          {post.contentHtml.includes("data-article-url") && <DiscussWithAI />}
+        <div className="flex items-baseline gap-2 text-sm text-muted tabular-nums">
+          <time>{formatDate(post.date)}</time>
+          {post.generated ? (
+            <span>· {String(post.generated)}</span>
+          ) : null}
         </div>
         <h1 className="mt-2 text-3xl font-bold tracking-tight">{post.title}</h1>
         {post.tags.length > 0 && (
