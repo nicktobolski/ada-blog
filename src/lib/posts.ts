@@ -10,6 +10,36 @@ import rehypeStringify from "rehype-stringify";
 
 const CONTENT_DIR = path.join(process.cwd(), "content");
 
+interface HastNode {
+  type: string;
+  tagName?: string;
+  properties?: Record<string, unknown>;
+  children?: HastNode[];
+}
+
+// Digest posts embed raw <img style="width: 100%"> tags, which stretch small
+// images (favicons, status icons) far past their natural resolution. Drop only
+// the width declaration — other inline styles (e.g. the height/display rules
+// on heading icons) are intentional — so images render at natural size, capped
+// at the column width by the global img { max-width: 100% } rule.
+function rehypeNaturalImageSize() {
+  return (tree: HastNode) => {
+    const walk = (node: HastNode) => {
+      if (node.tagName === "img" && node.properties?.style) {
+        const cleaned = String(node.properties.style)
+          .split(";")
+          .map((decl) => decl.trim())
+          .filter((decl) => decl && !/^width\s*:/i.test(decl))
+          .join("; ");
+        if (cleaned) node.properties.style = cleaned;
+        else delete node.properties.style;
+      }
+      node.children?.forEach(walk);
+    };
+    walk(tree);
+  };
+}
+
 export interface PostMeta {
   slug: string[];
   title: string;
@@ -117,6 +147,7 @@ export async function getPost(slug: string[]): Promise<Post | null> {
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
+    .use(rehypeNaturalImageSize)
     .use(rehypeStringify)
     .process(markdownBody);
 
