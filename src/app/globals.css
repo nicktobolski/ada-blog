@@ -169,11 +169,17 @@ body {
         }
 
         .prose details::details-content {
+            /* flow-root establishes a block formatting context, which keeps the
+               child margins INSIDE the animated box. Without it, block-size is a
+               definite length for the whole transition -- containing the margins
+               -- and then lands on `auto`, at which point they collapse straight
+               through the box. ~20px of height therefore appears in a single
+               frame, after the glide has already decelerated to ~5px/frame: the
+               margin was never part of what got animated. */
+            display: flow-root;
             block-size: 0;
-            /* `clip`, not `hidden`: clip does not establish a block formatting
-               context, so margin collapsing and float behaviour inside the
-               section stay exactly as they were. Leaving overflow-x visible
-               keeps floated images unaffected. */
+            /* `clip`, not `hidden`, so overflow-x stays visible and wide tables
+               and floated images are left alone. */
             overflow-y: clip;
             /* The destination state supplies the transition, so this closed
                rule times the *collapse* and the [open] rule times the expand.
@@ -189,6 +195,18 @@ body {
         .prose details[open]::details-content {
             block-size: auto;
             transition-duration: var(--details-ms, 220ms);
+        }
+
+        /* The formatting context above also traps the trailing bottom margin,
+           which used to collapse out past </details> and merge with the
+           section's own margin. Left alone it stacks instead, making every open
+           section 8-26px taller. Two levels reproduces the previous spacing
+           exactly on the shapes that occur here -- the last <p>, a <ul>'s last
+           <li>, a <blockquote>'s last <p>. Going a level deeper starts removing
+           space that genuinely was there, so this stops at two. */
+        .prose details > :last-child,
+        .prose details > :last-child > :last-child {
+            margin-bottom: 0;
         }
     }
 }
