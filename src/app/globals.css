@@ -211,15 +211,14 @@ body {
                                  var(--details-ms, 220ms);
         }
 
-        /* The formatting context above also traps the trailing bottom margin,
-           which used to collapse out past </details> and merge with the
-           section's own margin. Left alone it stacks instead, making every open
-           section 8-26px taller. Two levels reproduces the previous spacing
-           exactly on the shapes that occur here -- the last <p>, a <ul>'s last
-           <li>, a <blockquote>'s last <p>. Going a level deeper starts removing
-           space that genuinely was there, so this stops at two. */
-        .prose details > :last-child,
-        .prose details > :last-child > :last-child {
+        /* The formatting context above traps the trailing bottom margin, which
+           used to collapse out past </details> and merge with whatever follows.
+           Trapped, it adds instead of collapsing. Between consecutive sections
+           that is exactly right -- it is the only thing separating them. Before
+           a rule it is not: the rule's own top margin already provides the gap,
+           so the trapped margin would stack on top of it. */
+        .prose details:has(+ hr) > :last-child,
+        .prose details:has(+ hr) > :last-child > :last-child {
             margin-bottom: 0;
         }
     }
