@@ -97,25 +97,29 @@ body {
     display: none;
 }
 
-/* Chevron replacing the native disclosure triangle, sized in `em` so it tracks
-   the summaries that carry an inline font-size. Rotates in step with the
-   content so the section reads as one motion rather than a snap plus a glide. */
+/* Marker replacing the native disclosure triangle, which can't be transformed.
+   Sized in `em` so it tracks the summaries that carry an inline font-size, and
+   rotates in step with the content so the section reads as one motion rather
+   than a snap plus a glide.
+
+   Drawn as a triangle clipped out of a square rather than as a rotated box: a
+   square turned 90deg has the same bounding box, so the marker can never
+   overhang the summary and get sliced off by details[open]'s overflow-x: clip.
+   A rotated box overhangs by its half-diagonal and did exactly that. */
 .prose details summary::before {
     content: "";
     display: inline-block;
-    width: 0.44em;
-    height: 0.44em;
-    margin-right: 0.5em;
-    vertical-align: 0.06em;
-    /* Stroke in `em` too, so the 1.2em summaries get a proportionally heavier
-       chevron instead of a hairline. */
-    border-right: 0.14em solid currentColor;
-    border-bottom: 0.14em solid currentColor;
-    rotate: -45deg;
+    width: 0.62em;
+    height: 0.62em;
+    margin-right: 0.45em;
+    vertical-align: -0.01em;
+    background: currentColor;
+    clip-path: polygon(22% 8%, 22% 92%, 82% 50%);
+    rotate: 0deg;
 }
 
 .prose details[open] summary::before {
-    rotate: 45deg;
+    rotate: 90deg;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -208,16 +212,5 @@ body {
         .prose details > :last-child > :last-child {
             margin-bottom: 0;
         }
-    }
-}
-
-/* Collapsing a section you have scrolled past the top of yanks the viewport
-   back (see CollapsibleScrollReset) and shrinks the document under the scroll
-   position at the same time. Gliding through that reads as a lurch, so that
-   one case stays instant, as it was before the animation existed. */
-@media (prefers-reduced-motion: no-preference) {
-    .prose details[data-instant]::details-content,
-    .prose details[data-instant] summary::before {
-        transition-duration: 0s;
     }
 }
