@@ -190,7 +190,11 @@ body {
                Exits run shorter -- the reader already decided.
                --details-ms is stamped per-section at build time by
                rehypeCollapsibleDuration in src/lib/posts.ts. */
-            transition-property: block-size, content-visibility;
+            opacity: 0;
+            transition-property: block-size, opacity, content-visibility;
+            /* Collapsing, the fade runs the full length so the content is gone
+               exactly as the box finishes closing -- finishing early would leave
+               an empty box shrinking, which reads as a pop-out. */
             transition-duration: calc(var(--details-ms, 220ms) * 0.85);
             transition-timing-function: var(--ease-details);
             transition-behavior: allow-discrete;
@@ -198,7 +202,13 @@ body {
 
         .prose details[open]::details-content {
             block-size: auto;
-            transition-duration: var(--details-ms, 220ms);
+            opacity: 1;
+            /* Expanding, the fade finishes ahead of the height so the content is
+               solid by the time the motion settles, rather than still washing in
+               after everything has stopped moving. */
+            transition-duration: var(--details-ms, 220ms),
+                                 calc(var(--details-ms, 220ms) * 0.7),
+                                 var(--details-ms, 220ms);
         }
 
         /* The formatting context above also traps the trailing bottom margin,
