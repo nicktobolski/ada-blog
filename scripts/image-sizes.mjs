@@ -37,25 +37,50 @@ function collectUrls(dir, out = new Set()) {
   return out;
 }
 
+async function fetchOnce(url) {
+  const res = await fetch(url, {
+    headers: { "user-agent": "Mozilla/5.0", range: `bytes=0-${HEAD_BYTES - 1}` },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  if (!res.ok && res.status !== 206) return { status: res.status };
+  const buf = Buffer.from(await res.arrayBuffer());
+  // Getting bytes is not the same as getting an image: at least one origin
+  // answers a Range request with 206 and an HTML error page. Parsing has to
+  // fail into "definitely not an image", not into the unreachable-network path,
+  // or the URL is retried on every build and never gets dimensions.
+  let dimensions;
+  try {
+    dimensions = imageSize(buf);
+  } catch {
+    return { status: res.status };
+  }
+  return dimensions?.width && dimensions?.height
+    ? { w: dimensions.width, h: dimensions.height }
+    : { status: res.status };
+}
+
 async function measure(url) {
   // A src that isn't absolute resolves against this blog's own domain, where it
   // will never exist. No point asking the network.
   if (!/^https?:\/\//.test(url)) return { dead: true };
-  try {
-    const res = await fetch(url, {
-      headers: { "user-agent": "Mozilla/5.0", range: `bytes=0-${HEAD_BYTES - 1}` },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    // Only a definite "this is not here" is worth baking in; anything else may
-    // be hotlink protection or a hiccup that a real browser would get past.
-    if (res.status === 404 || res.status === 410) return { dead: true };
-    if (!res.ok && res.status !== 206) return null;
-    const buf = Buffer.from(await res.arrayBuffer());
-    const { width, height } = imageSize(buf);
-    return width && height ? { w: width, h: height } : null;
-  } catch {
-    return null; // unknown -- leave the tag alone and try again next build
+  let status = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const result = await fetchOnce(url);
+      if ("w" in result) return result;
+      status = result.status;
+    } catch {
+      // Couldn't reach the server at all -- a DNS failure or a timeout says
+      // nothing about the image, so leave it unknown and try again next build.
+      return null;
+    }
+    if (attempt === 0) await new Promise((r) => setTimeout(r, 750));
   }
+  // The server answered, twice, and would not give us the image. Checked
+  // against a real browser: every URL in this state failed to render there
+  // too, including the 403s that looked like they might be hotlink
+  // protection. Treat it as gone so it never renders a placeholder.
+  return { dead: true, status };
 }
 
 async function main() {
