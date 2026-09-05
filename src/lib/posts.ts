@@ -50,8 +50,8 @@ function rehypeNaturalImageSize() {
 // which a click handler could never catch. The cost is that the estimate is
 // viewport-independent: a narrow phone wraps taller than assumed and lands
 // somewhat short. The clamp keeps that error to a few tens of milliseconds.
-const COLLAPSE_MIN_MS = 180;
-const COLLAPSE_MAX_MS = 420;
+const COLLAPSE_MIN_MS = 220;
+const COLLAPSE_MAX_MS = 520;
 // Calibrated against real rendered heights measured in the browser across 259
 // sections spanning 96px to 8000px; the estimate lands within 0.82x-1.03x of
 // actual at the 10th/90th percentile.
@@ -83,13 +83,16 @@ function rehypeCollapsibleDuration() {
     const walk = (node: HastNode) => {
       if (node.tagName === "details") {
         // Square root, not linear: travel distance should lengthen the glide but
-        // far less than proportionally, or a tall thread would crawl. Gives ~180ms
-        // for a few bullet points, ~270ms for a typical comment thread, and 420ms
-        // for the longest sections on the site.
+        // far less than proportionally, or a tall thread would crawl. Gives
+        // ~235ms for a few bullet points, ~300ms for a typical section and
+        // ~410ms for a long comment thread. The durations are set by how much
+        // of the travel lands in a single frame, not by feel: at 60fps a 200ms
+        // animation is only 13 frames, so a section that moves 500px of page
+        // has to spend longer or the first frame alone is a visible jump.
         const height = estimateContentHeight(node);
         const ms = Math.min(
           COLLAPSE_MAX_MS,
-          Math.max(COLLAPSE_MIN_MS, Math.round(120 + 4.2 * Math.sqrt(height))),
+          Math.max(COLLAPSE_MIN_MS, Math.round(170 + 6.5 * Math.sqrt(height))),
         );
         const existing = node.properties?.style ? `${node.properties.style}; ` : "";
         node.properties = { ...node.properties, style: `${existing}--details-ms: ${ms}ms` };

@@ -8,9 +8,11 @@
     --border: #e5e5e5;
     --accent: #2563eb;
     --accent-visited: #7c3aed;
-    /* Steep start, long settle -- the movement is mostly over before the reader
-       registers it, which is what lets a ~300ms glide still feel instant. */
-    --ease-details: cubic-bezier(0.25, 1, 0.5, 1);
+    /* Plain ease-out. A steeper curve front-loads too much of the travel into
+       the first frame -- at 200ms a section only gets ~13 frames, and a drawer
+       curve spends 30% of the distance on frame one, which reads as a lurch
+       rather than a glide. */
+    --ease-details: cubic-bezier(0, 0, 0.58, 1);
 }
 
 @theme inline {
