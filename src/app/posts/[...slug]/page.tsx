@@ -10,7 +10,6 @@ import {
 import { formatDate } from "@/lib/format";
 import PostList from "@/components/PostList";
 import CollapsibleScrollReset from "@/components/CollapsibleScrollReset";
-import FloatSmallImages from "@/components/FloatSmallImages";
 
 interface Params {
   slug: string[];
@@ -94,7 +93,6 @@ async function PostPage({ slug }: { slug: string[] }) {
         dangerouslySetInnerHTML={{ __html: post.contentHtml }}
       />
       <CollapsibleScrollReset />
-      <FloatSmallImages />
     </article>
   );
 }

@@ -103,6 +103,82 @@ function rehypeCollapsibleDuration() {
   };
 }
 
+// The inline icons beside the "Hacker News Stories" / "Reddit Stories" headings
+// declare a height but no width, so the browser has nothing to reserve until the
+// image arrives and the heading text jumps sideways when it does. Both are
+// favicons, i.e. square, so reserving a square box of the declared height is
+// right; object-fit keeps a non-square one letterboxed rather than stretched.
+function rehypeReserveIconSpace() {
+  return (tree: HastNode) => {
+    const walk = (node: HastNode) => {
+      const style = node.tagName === "img" ? String(node.properties?.style ?? "") : "";
+      const height = /(?:^|;)\s*height\s*:\s*([^;]+)/i.exec(style);
+      if (height && !/(?:^|;)\s*width\s*:/i.test(style)) {
+        node.properties!.style =
+          `width: ${height[1].trim()}; object-fit: contain; ${style}`;
+      }
+      node.children?.forEach(walk);
+    };
+    walk(tree);
+  };
+}
+
+type ImageSize = { w: number; h: number } | { dead: true };
+
+// Written by scripts/image-sizes.mjs before the build. Missing entries are
+// normal (an image we could not measure) and simply mean "leave it alone".
+const IMAGE_SIZES: Record<string, ImageSize> = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(process.cwd(), "image-sizes.json"), "utf8"));
+  } catch {
+    return {};
+  }
+})();
+
+// Matches the old client-side rule: wide enough for avatars and favicons,
+// narrow enough that the remaining column still fits comfortable text lines.
+const FLOAT_MAX_WIDTH = 320;
+const NO_FLOAT_ANCESTORS = new Set(["h1", "h2", "h3", "h4", "summary"]);
+
+// Stamps the measured intrinsic size onto each image so the browser reserves
+// the right box up front instead of reflowing the page as each one lands, and
+// decides here -- rather than after load -- which images are small enough to
+// float. Images known to be gone are dropped outright: they would otherwise
+// render their alt text as a placeholder and then delete themselves.
+function rehypeImageDimensions() {
+  return (tree: HastNode) => {
+    const walk = (node: HastNode, ancestors: string[]) => {
+      if (!node.children) return;
+      const nested = node.tagName ? [...ancestors, node.tagName] : ancestors;
+      node.children = node.children.filter((child) => {
+        if (child.tagName !== "img") {
+          walk(child, nested);
+          return true;
+        }
+        const size = IMAGE_SIZES[String(child.properties?.src ?? "")];
+        if (!size) return true;
+        if ("dead" in size) return false;
+
+        const properties = (child.properties ??= {});
+        properties.width = size.w;
+        properties.height = size.h;
+        // Inline icons sit in the text flow and are excluded, as are anything
+        // inside a heading or a summary label.
+        const inline = /display\s*:\s*inline/i.test(String(properties.style ?? ""));
+        if (
+          size.w <= FLOAT_MAX_WIDTH &&
+          !inline &&
+          !nested.some((tag) => NO_FLOAT_ANCESTORS.has(tag))
+        ) {
+          properties.className = ["float-img"];
+        }
+        return true;
+      });
+    };
+    walk(tree, []);
+  };
+}
+
 export interface PostMeta {
   slug: string[];
   title: string;
@@ -211,6 +287,8 @@ export async function getPost(slug: string[]): Promise<Post | null> {
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeNaturalImageSize)
+    .use(rehypeReserveIconSpace)
+    .use(rehypeImageDimensions)
     .use(rehypeCollapsibleDuration)
     .use(rehypeStringify)
     .process(markdownBody);

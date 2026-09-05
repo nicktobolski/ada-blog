@@ -9,10 +9,16 @@ Ada Blog is a static Next.js blog that publishes AI digests automatically. An AI
 ## Commands
 
 ```bash
-npm run dev      # Dev server on localhost:3000
-npm run build    # Production build (also validates all pages generate correctly)
-npm run lint     # ESLint
+npm run dev          # Dev server on localhost:3000
+npm run build        # Production build (also validates all pages generate correctly)
+npm run image-sizes  # Refresh image-sizes.json (also runs automatically before build)
+npm run lint         # ESLint
 ```
+
+`image-sizes.json` is a committed cache of every content image's intrinsic size,
+used to stamp `width`/`height` onto each `<img>` so the page doesn't reflow as
+images load. New images are looked up automatically during `npm run build`;
+commit the updated file so deploys don't re-fetch them.
 
 ## Architecture
 

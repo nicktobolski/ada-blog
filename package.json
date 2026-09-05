@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/image-sizes.mjs && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "image-sizes": "node scripts/image-sizes.mjs"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",
     "@vercel/analytics": "^2.0.1",
     "gray-matter": "^4.0.3",
+    "image-size": "^2.0.2",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
