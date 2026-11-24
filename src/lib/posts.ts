@@ -245,13 +245,21 @@ function loadAllPosts(): PostMeta[] {
 
 let cachedPosts: PostMeta[] | null = null;
 
+// Every list (home, pagination, categories, tags) is built from
+// getAllPosts(), so this is the one place that hides `unlisted: true` posts.
+// Their pages are still generated -- getAllSlugs() reads the files directly
+// -- so they stay reachable by URL, e.g. from the header nav.
+function loadListedPosts(): PostMeta[] {
+  return loadAllPosts().filter((post) => post.unlisted !== true);
+}
+
 export function getAllPosts(): PostMeta[] {
   // Cache only in production builds: content can't change mid-build, but in
   // dev the module state outlives file edits and would serve stale posts.
   if (process.env.NODE_ENV === "production") {
-    return (cachedPosts ??= loadAllPosts());
+    return (cachedPosts ??= loadListedPosts());
   }
-  return loadAllPosts();
+  return loadListedPosts();
 }
 
 export const POSTS_PER_PAGE = 20;

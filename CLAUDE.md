@@ -40,6 +40,8 @@ tags: [ai-digest, daily]
 ---
 ```
 
+Add `unlisted: true` to keep a post out of every list (home, categories, tags) while its page still builds -- the AI Jargon Dictionary (`content/ai-digest/jargon.md`) uses this and is linked from the header nav instead.
+
 ## Deployment
 
 Vercel auto-deploys on push to `main`. No GitHub Actions or manual deploy steps.
